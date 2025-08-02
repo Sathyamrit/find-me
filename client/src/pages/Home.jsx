@@ -1,8 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Home.css';
 import Button from '../components/Button';
-import { Upload, FileImage, X, Image as ImageIcon } from 'lucide-react';
-
+import Result from './Result';
 
 const Home = () => {
   //temporary state for images
@@ -13,8 +13,14 @@ const Home = () => {
   const [targetPreview, setTargetPreview] = useState(null);
   const [galleryPreview, setGalleryPreview] = useState([]);
 
+  const navigate = useNavigate();
+
+  const findMe= () => {
+    navigate('/result');
+  };
+
   //handlers 
-  //1. target image handler
+  //target image handler
   const handleTargetChange = (event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith('image/')) {
@@ -34,7 +40,7 @@ const Home = () => {
     }
   };
 
-  //2. gallery image handler
+  //gallery image handler
   const handleGalleryChange = (event) => {
     const files = Array.from(event.target.files);
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
@@ -47,8 +53,7 @@ const Home = () => {
 
   //remove gallery image
   const removeGalleryImage = (indexToRemove) => {
-    URL.revokeObjectURL(galleryPreview[indexToRemove]); // Clean up the object URL
-
+    URL.revokeObjectURL(galleryPreview[indexToRemove]);
     setGalleryImages(prev => prev.filter((_, index) => index !== indexToRemove));
     setGalleryPreview(prev => prev.filter((_, index) => index !== indexToRemove));
   };
@@ -60,8 +65,6 @@ const Home = () => {
 
       <div className='main-contianer'>
         <div className='left-main-container'>
-          {/* <img className='placeholder' src='https://placehold.co/200' alt='Placeholder' /> */}
-
           {targetPreview ? (
             <img src={targetPreview} />
           ) : ( 
@@ -105,12 +108,15 @@ const Home = () => {
         </div>
       </div>
 
-      <Button 
+
+      <Button
         className='find-me'
         disabled={!targetImage || galleryImages.length === 0}
+        onClick={findMe}
       >
         Find Me!
       </Button>
+
 
     </div>
   );
