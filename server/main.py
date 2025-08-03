@@ -1,13 +1,14 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-# Initialize FastAPI app
+# initialize FastAPI app
 app = FastAPI(
     title="Face Recognition API",
     description="API for face recognition to find a face in a gallery of images",
     version="1.0.0",
 )
 
+# middleware 
 app.add_middleware(
   CORSMiddleware,
   allow_origins=["*"],

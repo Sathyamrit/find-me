@@ -9,7 +9,6 @@ const Home = () => {
   const [targetImage, setTargetImage] = useState(null);
   const [galleryImages, setGalleryImages] = useState([]);
 
-  //temporary preview of images
   const [targetPreview, setTargetPreview] = useState(null);
   const [galleryPreview, setGalleryPreview] = useState([]);
 
@@ -20,7 +19,6 @@ const Home = () => {
   };
 
   //handlers 
-  //target image handler
   const handleTargetChange = (event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith('image/')) {
@@ -31,7 +29,6 @@ const Home = () => {
     }
   };
 
-  //remove target image
   const removeTargetImage = () => {
     setTargetImage(null);
     if (targetPreview) {
@@ -40,7 +37,6 @@ const Home = () => {
     }
   };
 
-  //gallery image handler
   const handleGalleryChange = (event) => {
     const files = Array.from(event.target.files);
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
@@ -51,7 +47,6 @@ const Home = () => {
     setGalleryPreview(prev => [...prev, ...newPreviews]);
   };
 
-  //remove gallery image
   const removeGalleryImage = (indexToRemove) => {
     URL.revokeObjectURL(galleryPreview[indexToRemove]);
     setGalleryImages(prev => prev.filter((_, index) => index !== indexToRemove));
@@ -111,7 +106,7 @@ const Home = () => {
 
       <Button
         className='find-me'
-        disabled={!targetImage || galleryImages.length === 0}
+        // disabled={!targetImage || galleryImages.length === 0}
         onClick={findMe}
       >
         Find Me!
