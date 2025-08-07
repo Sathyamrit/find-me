@@ -1,38 +1,50 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Home.css';
 import Button from '../components/Button';
-import Result from './Result';
+import './Home.css';
 
 const Home = () => {
-  //temporary state for images
+  // State for the actual file objects
   const [targetImage, setTargetImage] = useState(null);
   const [galleryImages, setGalleryImages] = useState([]);
 
+  // State for the image preview URLs
   const [targetPreview, setTargetPreview] = useState(null);
-  const [galleryPreview, setGalleryPreview] = useState([]);
+  const [galleryPreviews, setGalleryPreviews] = useState([]);
 
   const navigate = useNavigate();
 
-  const findMe= () => {
+  const findMe = () => {
+    // This is where you would eventually add the API call logic
+    // For now, it just navigates to the result page
+    if (!targetImage || galleryImages.length === 0) {
+        alert("Please upload a target image and at least one gallery image.");
+        return;
+    }
     navigate('/result');
   };
 
-  //handlers 
+  // handlers
+
   const handleTargetChange = (event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith('image/')) {
       setTargetImage(file);
+      // Clean up the old preview URL before creating a new one
+      if (targetPreview) {
+        URL.revokeObjectURL(targetPreview);
+      }
       setTargetPreview(URL.createObjectURL(file));
     } else {
       console.log('Please select a valid image file.');
     }
   };
 
-  const removeTargetImage = () => {
+  const removeTargetImage = (e) => {
+    e.stopPropagation(); 
     setTargetImage(null);
     if (targetPreview) {
-      URL.revokeObjectURL(targetPreview); // Clean up the object URL
+      URL.revokeObjectURL(targetPreview);
       setTargetPreview(null);
     }
   };
@@ -44,13 +56,17 @@ const Home = () => {
     setGalleryImages(prev => [...prev, ...imageFiles]);
 
     const newPreviews = imageFiles.map(file => URL.createObjectURL(file));
-    setGalleryPreview(prev => [...prev, ...newPreviews]);
+    setGalleryPreviews(prev => [...prev, ...newPreviews]);
   };
 
-  const removeGalleryImage = (indexToRemove) => {
-    URL.revokeObjectURL(galleryPreview[indexToRemove]);
+  const removeGalleryImage = (e, indexToRemove) => {
+    e.stopPropagation(); // Prevent the upload dialog from opening
+    
+    // Revoke the object URL to free up memory
+    URL.revokeObjectURL(galleryPreviews[indexToRemove]);
+    
     setGalleryImages(prev => prev.filter((_, index) => index !== indexToRemove));
-    setGalleryPreview(prev => prev.filter((_, index) => index !== indexToRemove));
+    setGalleryPreviews(prev => prev.filter((_, index) => index !== indexToRemove));
   };
 
   return (
@@ -58,61 +74,70 @@ const Home = () => {
       <h1>Find Me</h1>
       <p>Identify your face across your gallery</p>
 
-      <div className='main-contianer'>
-        <div className='left-main-container'>
-          {targetPreview ? (
-            <img src={targetPreview} />
-          ) : ( 
-            <div className='target-image-container'
-              onClick={() => document.getElementById('target-upload').click()}
-            >
-              <span>Click to upload target image</span>
-              <input
-                type='file'
-                id='target-upload'
-                accept='image/*'
-                onChange={handleTargetChange}
-                style={{ display: 'none' }}
-                className='hidden'
-              />
-            </div>
-          )
-        }
+      <div className='main-container'>
+        {/* --- Target Image Section --- */}
+        <div className='upload-section'>
+          <h2 className='section-title'>Target Image</h2>
+          <div 
+            className='upload-box target-box'
+            onClick={() => !targetPreview && document.getElementById('target-upload').click()}
+          >
+            {targetPreview ? (
+              <div className='image-preview-wrapper'>
+                <img src={targetPreview} alt="Target Preview" className='preview-image' />
+                <button onClick={removeTargetImage} className='remove-btn'>X</button>
+              </div>
+            ) : ( 
+              <span>Click to upload</span>
+            )}
+            <input
+              type='file'
+              id='target-upload'
+              accept='image/*'
+              onChange={handleTargetChange}
+              style={{ display: 'none' }}
+            />
+          </div>
         </div>
 
-        <div className='right-main-container'>
-          {/* {galleryPreview.length === 0 ? ( */}
-          {0 ? (
-            <img src={galleryPreview} />
-          ) : ( 
-            <div className='gallery-image-container'
-              onClick={() => document.getElementById('gallery-upload').click()}
-            >
-              <span>Click to upload the gallery</span>
-              <input
-                type='file'
-                id='gallery-upload'
-                accept='image/*'
-                onChange={handleGalleryChange}
-                style={{ display: 'none' }}
-                className='hidden'
-              />
-            </div>
-          )
-        }
+        {/* --- Gallery Section --- */}
+        <div className='upload-section gallery-section'>
+           <h2 className='section-title'>Image Gallery</h2>
+          <div 
+            className='upload-box gallery-box'
+            onClick={() => document.getElementById('gallery-upload').click()}
+          >
+            {galleryPreviews.length > 0 ? (
+              galleryPreviews.map((preview, index) => (
+                <div key={index} className='image-preview-wrapper'>
+                  <img src={preview} alt={`Gallery Preview ${index + 1}`} className='preview-image' />
+                  <button onClick={(e) => removeGalleryImage(e, index)} className='remove-btn'>X</button>
+                </div>
+              ))
+            ) : (
+              <span>Click to upload multiple images</span>
+            )}
+            <input
+              type='file'
+              id='gallery-upload'
+              accept='image/*'
+              multiple // Allow multiple file selection
+              onChange={handleGalleryChange}
+              style={{ display: 'none' }}
+            />
+          </div>
         </div>
       </div>
 
-
-      <Button
-        className='find-me'
-        // disabled={!targetImage || galleryImages.length === 0}
-        onClick={findMe}
-      >
-        Find Me!
-      </Button>
-
-
+      <div className='button-container'>
+        <Button
+          className='find-me'
+          disabled={!targetImage || galleryImages.length === 0}
+          onClick={findMe}
+        >
+          Find Me!
+        </Button>
+      </div>
     </div>
   );
 };
