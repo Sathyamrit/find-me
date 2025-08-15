@@ -1,12 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
+import axios from 'axios'; 
 import './Home.css';
+
+const API_URL = 'http://127.0.0.1:8000/detect-people/';
 
 const Home = () => {
   // State for the actual file objects
   const [targetImage, setTargetImage] = useState(null);
   const [galleryImages, setGalleryImages] = useState([]);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // State for the image preview URLs
   const [targetPreview, setTargetPreview] = useState(null);
@@ -14,15 +20,44 @@ const Home = () => {
 
   const navigate = useNavigate();
 
-  const findMe = () => {
-    // This is where you would eventually add the API call logic
-    // For now, it just navigates to the result page
-    if (!targetImage || galleryImages.length === 0) {
-        alert("Please upload a target image and at least one gallery image.");
-        return;
+  const findMe = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    // Use FormData to send files to the backend
+    const formData = new FormData();
+    galleryImages.forEach(file => {
+      formData.append('gallery_images', file);
+    });
+
+    try {
+      const response = await axios.post(API_URL, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      // Navigate to the result page, passing the API response and original images
+      navigate('/result', { 
+        state: { 
+          apiResponse: response.data, // e.g., { with_people: [...], without_people: [...] }
+          originalImages: galleryImages 
+        } 
+      });
+
+    } catch (err) {
+      console.error("API Error:", err);
+      const errorMessage = err.response?.data?.detail || "An unexpected error occurred. Please try again.";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-    navigate('/result');
   };
+
+  // const findMe = () => {
+
+  //   navigate('/result');
+  // };
 
   // handlers
 

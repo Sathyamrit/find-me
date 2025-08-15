@@ -129,11 +129,9 @@ h1 {
 }
 
 .find-me {
-  /* Assuming Button component accepts className */
   padding: 12px 32px;
   font-size: 1.2rem;
   border-radius: 50px;
-  /* Add other styles for your custom button component */
 }
 
 .find-me:disabled {
