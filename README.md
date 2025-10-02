@@ -10,3 +10,16 @@ npm run dev
 # In a new terminal:
 cd server
 uvicorn main:app --reload
+
+
+# gcloud url
+https://find-me-backend-service-933492600521.us-central1.run.app/
+
+
+# mongodb atlas
+  # username
+    find_me_db_user
+  # password
+    7Awi9kRv7WHQZKLe
+  # connection string
+    mongodb+srv://find_me_db_user:7Awi9kRv7WHQZKLe@find-me.kf6bime.mongodb.net/?retryWrites=true&w=majority&appName=find-me

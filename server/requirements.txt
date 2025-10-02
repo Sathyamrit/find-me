@@ -1,0 +1,16 @@
+# For the Web Server
+fastapi
+uvicorn
+gunicorn
+python-multipart
+
+# For Machine Learning & Image Processing
+face_recognition
+Pillow
+numpy
+
+# For Database and Authentication 
+pymongo[srv]
+motor
+bcrypt
+python-dotenv

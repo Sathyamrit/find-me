@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import './Home.css'; // Re-using the same CSS for consistency
+import './Result.css'; // Re-using the same CSS for consistency
 import Button from '../components/Button';
 import { useNavigate } from 'react-router-dom';
 
@@ -40,7 +40,7 @@ const Result = () => {
       
       {/* Section for Images WITH People */}
       <div className='results-section'>
-        <h2 className='section-title'>Images With People ({imagesWithPeople.length})</h2>
+        <h2 className='section-title'>Images Containing Target ({imagesWithPeople.length})</h2>
         <div className='upload-box gallery-box'>
           {imagesWithPeople.length > 0 ? (
             imagesWithPeople.map((image) => (
@@ -56,7 +56,7 @@ const Result = () => {
 
       {/* Section for Images WITHOUT People */}
       <div className='results-section' style={{marginTop: '3rem'}}>
-        <h2 className='section-title'>Images Without People ({imagesWithoutPeople.length})</h2>
+        <h2 className='section-title'>Images Without Target ({imagesWithoutPeople.length})</h2>
         <div className='upload-box gallery-box'>
           {imagesWithoutPeople.length > 0 ? (
             imagesWithoutPeople.map((image) => (
@@ -72,7 +72,7 @@ const Result = () => {
 
       {/* Button to go back */}
       <Button
-        className='find-me'
+        className='start-over'
         onClick={() => navigate('/')}
         >
         Start Over

@@ -1,32 +1,26 @@
 :root {
-  --border-color: #4a5568;
-  --border-color-hover: #2d8cff;
+  --border-color: #669bbc;
+  --border-color-hover: #003049;
 }
 
 body {
   background-color: var(--background-color);
   color: var(--text-color);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; */
   margin: 0;
-  padding: 20px;
+  padding: 0;
 }
 
 .home-container {
   max-width: 1200px;
   margin: 0 auto;
-}
-
-h1 {
-  font-size: 4rem;
-  color: var(--text-color);
-  text-align: center;
-  margin-bottom: 0;
+  padding: 0 5rem;
 }
 
 .home-container > p {
   text-align: center;
   font-size: 1.2rem;
-  color: #a0aec0;
+  color: #c1121f;
   margin-top: 0.5rem;
   margin-bottom: 3rem;
 }
@@ -125,16 +119,18 @@ h1 {
 
 .button-container {
   text-align: center;
-  margin-top: 3rem;
+  margin: 3rem 0; 
 }
 
 .find-me {
   padding: 12px 32px;
   font-size: 1.2rem;
   border-radius: 50px;
+  background-color: #d61320;
 }
 
 .find-me:disabled {
-  background-color: #4a5568;
+  background-color: #780000;
   cursor: not-allowed;
 }
+

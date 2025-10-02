@@ -1,3 +1,13 @@
 .result-container p{
   font-size: 8em;
 }
+.start-over {
+  background-color: #c1121f;
+  color: white;
+  margin: 2em;
+  padding: 12px 32px;
+  font-size: 1.2rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
