@@ -1,6 +1,6 @@
-.custom-button {
+.button {
   padding: 12px 24px;
-  border-radius: 8px;
+  border-radius: 20px;
   border: none;
   cursor: pointer;
   font-size: 16px;
@@ -10,15 +10,15 @@
   color: white;
 }
 
-.custom-button:hover {
+.button:hover {
   background-color: #005ecb;
 }
 
-.custom-button:active {
+.button:active {
   transform: scale(0.98);
 }
 
-.custom-button:disabled {
+.button:disabled {
   background-color: #555;
   color: #aaa;
   cursor: not-allowed;

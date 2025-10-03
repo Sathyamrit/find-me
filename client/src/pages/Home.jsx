@@ -6,8 +6,7 @@ import './Home.css';
 import { Camera } from 'lucide-react';
 import CameraModal from '../components/CameraModal';
 
-// const API_URL = 'http://127.0.0.1:8000/detect-people/'; //local testing
-const API_URL = 'https://find-me-backend-service-933492600521.us-central1.run.app/detect-people/';
+const API_URL = 'https://find-me-backend-service-933492600521.us-central1.run.app/classify-and-match/';
 
 const Home = () => {
   // State for the actual file objects
@@ -21,20 +20,19 @@ const Home = () => {
   const [targetPreview, setTargetPreview] = useState(null);
   const [galleryPreviews, setGalleryPreviews] = useState([]);
 
-  // State for Camera Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [captureMode, setCaptureMode] = useState('target'); // 'target' or 'gallery'
 
   const navigate = useNavigate();
 
   const findMe = async () => {
+    if (!targetImage || galleryImages.length === 0) return;
+
     setIsLoading(true);
     setError(null);
 
-    // Use FormData to send files to the backend
     const formData = new FormData();
-
     formData.append('target_image', targetImage);
-
     galleryImages.forEach(file => {
       formData.append('gallery_images', file);
     });
@@ -46,10 +44,9 @@ const Home = () => {
         },
       });
       
-      // Navigate to the result page, passing the API response and original images
       navigate('/result', { 
         state: { 
-          apiResponse: response.data, // e.g., { with_people: [...], without_people: [...] }
+          apiResponse: response.data,
           originalImages: galleryImages 
         } 
       });
@@ -63,12 +60,22 @@ const Home = () => {
     }
   };
 
+  const openCamera = (mode) => {
+    setCaptureMode(mode);
+    setIsModalOpen(true);
+  };
+
   const handleCapture = (capturedFile) => {
-    // This function receives the file from the CameraModal
-    if (capturedFile) {
-        setTargetImage(capturedFile);
-        if (targetPreview) URL.revokeObjectURL(targetPreview);
-        setTargetPreview(URL.createObjectURL(capturedFile));
+    if (!capturedFile) return;
+
+    if (captureMode === 'target') {
+      setTargetImage(capturedFile);
+      if (targetPreview) URL.revokeObjectURL(targetPreview);
+      setTargetPreview(URL.createObjectURL(capturedFile));
+    } else {
+      setGalleryImages(prev => [...prev, capturedFile]);
+      const newPreview = URL.createObjectURL(capturedFile);
+      setGalleryPreviews(prev => [...prev, newPreview]);
     }
   };
 
@@ -76,13 +83,10 @@ const Home = () => {
     const file = event.target.files[0];
     if (file && file.type.startsWith('image/')) {
       setTargetImage(file);
-      // Clean up the old preview URL before creating a new one
       if (targetPreview) {
         URL.revokeObjectURL(targetPreview);
       }
       setTargetPreview(URL.createObjectURL(file));
-    } else {
-      console.log('Please select a valid image file.');
     }
   };
 
@@ -106,21 +110,18 @@ const Home = () => {
   };
 
   const removeGalleryImage = (e, indexToRemove) => {
-    e.stopPropagation(); // Prevent the upload dialog from opening
-    
-    // Revoke the object URL to free up memory
+    e.stopPropagation();
     URL.revokeObjectURL(galleryPreviews[indexToRemove]);
-    
     setGalleryImages(prev => prev.filter((_, index) => index !== indexToRemove));
     setGalleryPreviews(prev => prev.filter((_, index) => index !== indexToRemove));
   };
 
   return (
-    <div>
+    <>
       <CameraModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onCapture={handleCapture}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCapture={handleCapture}
       />
       <div className='home-container'>
         <h1>Find Me</h1>
@@ -141,48 +142,42 @@ const Home = () => {
                 </div>
               ) : ( 
                 <div className="upload-prompt">
-                  <span>Click to upload</span> <br />
-                  <span className="or-divider">- or -</span> <br />
-                  <Button className="icon-btn" onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}>
+                  <span>Click to upload</span> <br/>
+                  <span className="or-divider">- or -</span> <br/>
+                  <Button className="icon-btn" onClick={(e) => { e.stopPropagation(); openCamera('target'); }}>
                     <Camera size={15} /> Capture
                   </Button>
                 </div>
               )}
-              <input
-                type='file'
-                id='target-upload'
-                accept='image/*'
-                onChange={handleTargetChange}
-                style={{ display: 'none' }}
-              />
+              <input type='file' id='target-upload' onChange={handleTargetChange} style={{ display: 'none' }} />
             </div>
           </div>
 
-          {/* --- Gallery Section --- */}
+          {/* --- Gallery Section (Reverted to old style) --- */}
           <div className='upload-section gallery-section'>
             <h2 className='section-title'>Image Gallery</h2>
             <div 
-              className='upload-box gallery-box'
+              className='upload-box'
               onClick={() => document.getElementById('gallery-upload').click()}
             >
-              {galleryPreviews.length > 0 ? (
-                galleryPreviews.map((preview, index) => (
-                  <div key={index} className='image-preview-wrapper'>
-                    <img src={preview} alt={`Gallery Preview ${index + 1}`} className='preview-image' />
-                    <button onClick={(e) => removeGalleryImage(e, index)} className='remove-btn'>X</button>
-                  </div>
-                ))
-              ) : (
-                <span>Click to upload multiple images</span>
+              {galleryPreviews.map((preview, index) => (
+                <div 
+                  key={index} 
+                  className='image-preview-wrapper' 
+                  onClick={(e) => e.stopPropagation()} // Prevent opening file dialog when clicking an image
+                >
+                  <img src={preview} alt={`Gallery Preview ${index + 1}`} className='preview-image' />
+                  <button onClick={(e) => removeGalleryImage(e, index)} className='remove-btn'>X</button>
+                </div>
+              ))}
+              
+              {/* Show this prompt only when the gallery is empty */}
+              {galleryPreviews.length === 0 && (
+                <div className="upload-prompt">
+                  <span>Click to upload</span>
+                </div>
               )}
-              <input
-                type='file'
-                id='gallery-upload'
-                accept='image/*'
-                multiple // Allow multiple file selection
-                onChange={handleGalleryChange}
-                style={{ display: 'none' }}
-              />
+              <input type='file' id='gallery-upload' multiple onChange={handleGalleryChange} style={{ display: 'none' }} />
             </div>
           </div>
         </div>
@@ -199,7 +194,7 @@ const Home = () => {
           </Button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

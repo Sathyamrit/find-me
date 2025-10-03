@@ -1,27 +1,38 @@
-import React, { useMemo } from 'react';
-import { useLocation, Link } from 'react-router-dom';
-import './Result.css'; // Re-using the same CSS for consistency
+import React, { useMemo, useEffect } from 'react';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
+import './Result.css';
 import Button from '../components/Button';
-import { useNavigate } from 'react-router-dom';
 
 const Result = () => {
   const { state } = useLocation();
-
   const navigate = useNavigate();
 
-  const { imagesWithPeople, imagesWithoutPeople } = useMemo(() => {
+  const { matchedImages, unmatchedWithPeople, withoutPeople } = useMemo(() => {
+    // Guard clause: if there's no state, return empty arrays
     if (!state?.apiResponse || !state?.originalImages) {
-      return { imagesWithPeople: [], imagesWithoutPeople: [] };
+      return { matchedImages: [], unmatchedWithPeople: [], withoutPeople: [] };
     }
 
     const { apiResponse, originalImages } = state;
+    
+    // Create a mapping of filename to a temporary URL for quick lookups
     const imageMap = new Map(originalImages.map(file => [file.name, URL.createObjectURL(file)]));
     
-    const withPeople = apiResponse.with_people.map(name => ({ name, url: imageMap.get(name) })).filter(img => img.url);
-    const withoutPeople = apiResponse.without_people.map(name => ({ name, url: imageMap.get(name) })).filter(img => img.url);
+    // Map the filenames from the API response to their corresponding image URLs
+    const matched = (apiResponse.matched_images || []).map(name => ({ name, url: imageMap.get(name) })).filter(img => img.url);
+    const unmatched = (apiResponse.unmatched_images_with_people || []).map(name => ({ name, url: imageMap.get(name) })).filter(img => img.url);
+    const noPeople = (apiResponse.images_without_people || []).map(name => ({ name, url: imageMap.get(name) })).filter(img => img.url);
     
-    return { imagesWithPeople: withPeople, imagesWithoutPeople: withoutPeople };
+    return { matchedImages: matched, unmatchedWithPeople: unmatched, withoutPeople: noPeople };
   }, [state]);
+
+  useEffect(() => {
+    return () => {
+      const allImages = [...matchedImages, ...unmatchedWithPeople, ...withoutPeople];
+      allImages.forEach(image => URL.revokeObjectURL(image.url));
+    };
+  }, [matchedImages, unmatchedWithPeople, withoutPeople]);
+
 
   if (!state) {
     return (
@@ -33,50 +44,66 @@ const Result = () => {
     );
   }
 
-  // website rendering 
   return (
     <div className='home-container'>
-      <h1>Detection Results</h1>
+      <h1>Classification Results</h1>
       
-      {/* Section for Images WITH People */}
+      {/* --- NEW: Section for Matched Images --- */}
       <div className='results-section'>
-        <h2 className='section-title'>Images Containing Target ({imagesWithPeople.length})</h2>
+        <h2 className='section-title'>Matched Images ({matchedImages.length})</h2>
         <div className='upload-box gallery-box'>
-          {imagesWithPeople.length > 0 ? (
-            imagesWithPeople.map((image) => (
+          {matchedImages.length > 0 ? (
+            matchedImages.map((image) => (
               <div key={image.name} className='image-preview-wrapper'>
                 <img src={image.url} alt={image.name} className='preview-image' />
               </div>
             ))
           ) : (
-            <p>No images with people were found in your selection.</p>
+            <p>No images were found containing the target person.</p>
           )}
         </div>
       </div>
 
-      {/* Section for Images WITHOUT People */}
+      {/* --- NEW: Section for Unmatched Images (that still contain people) --- */}
       <div className='results-section' style={{marginTop: '3rem'}}>
-        <h2 className='section-title'>Images Without Target ({imagesWithoutPeople.length})</h2>
+        <h2 className='section-title'>Unmatched Images with People ({unmatchedWithPeople.length})</h2>
         <div className='upload-box gallery-box'>
-          {imagesWithoutPeople.length > 0 ? (
-            imagesWithoutPeople.map((image) => (
+          {unmatchedWithPeople.length > 0 ? (
+            unmatchedWithPeople.map((image) => (
               <div key={image.name} className='image-preview-wrapper'>
                 <img src={image.url} alt={image.name} className='preview-image' />
               </div>
             ))
           ) : (
-            <p>All images contained people.</p>
+            <p>No other people were found in the gallery.</p>
           )}
         </div>
       </div>
 
-      {/* Button to go back */}
-      <Button
-        className='start-over'
-        onClick={() => navigate('/')}
-        >
-        Start Over
-      </Button>
+      {/* --- UPDATED: Section for Images Without People --- */}
+      <div className='results-section' style={{marginTop: '3rem'}}>
+        <h2 className='section-title'>Images Without People ({withoutPeople.length})</h2>
+        <div className='upload-box gallery-box'>
+          {withoutPeople.length > 0 ? (
+            withoutPeople.map((image) => (
+              <div key={image.name} className='image-preview-wrapper'>
+                <img src={image.url} alt={image.name} className='preview-image' />
+              </div>
+            ))
+          ) : (
+            <p>All images in the gallery contained people.</p>
+          )}
+        </div>
+      </div>
+
+      <div className='button-container'>
+        <Button
+          className='start-over'
+          onClick={() => navigate('/')}
+          >
+          Start Over
+        </Button>
+      </div>
     </div>
   );
 };

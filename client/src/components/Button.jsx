@@ -5,7 +5,7 @@ const Button = ({ children, onClick, className, type = 'button', disabled = fals
   return (
     <button
       type={type}
-      className={`custom-button ${className}`}
+      className={`button ${className}`}
       onClick={onClick}
       disabled={disabled}
     >
