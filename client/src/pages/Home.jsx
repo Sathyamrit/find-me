@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
-import axios from 'axios'; 
+import axios from 'axios';
 import './Home.css';
 import { Camera } from 'lucide-react';
 import CameraModal from '../components/CameraModal';
@@ -9,27 +9,38 @@ import CameraModal from '../components/CameraModal';
 const API_URL = 'https://find-me-backend-service-933492600521.us-central1.run.app/classify-and-match/';
 
 const Home = () => {
-  // State for the actual file objects
   const [targetImage, setTargetImage] = useState(null);
   const [galleryImages, setGalleryImages] = useState([]);
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  // State for the image preview URLs
   const [targetPreview, setTargetPreview] = useState(null);
   const [galleryPreviews, setGalleryPreviews] = useState([]);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [captureMode, setCaptureMode] = useState('target'); // 'target' or 'gallery'
-
+  const [captureMode, setCaptureMode] = useState('target');
   const navigate = useNavigate();
+
+  // Redirect to login if no token is found
+  useEffect(() => {
+    const token = localStorage.getItem('userToken');
+    if (!token) {
+      navigate('/login');
+    }
+  }, [navigate]);
 
   const findMe = async () => {
     if (!targetImage || galleryImages.length === 0) return;
 
     setIsLoading(true);
     setError(null);
+
+    // --- CRITICAL FIX: Get the token from localStorage ---
+    const token = localStorage.getItem('userToken');
+    if (!token) {
+      setError("Authentication error. Please log in again.");
+      setIsLoading(false);
+      navigate('/login');
+      return;
+    }
 
     const formData = new FormData();
     formData.append('target_image', targetImage);
@@ -41,6 +52,8 @@ const Home = () => {
       const response = await axios.post(API_URL, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          // --- CRITICAL FIX: Add the Authorization header ---
+          'Authorization': `Bearer ${token}`,
         },
       });
       
@@ -53,8 +66,13 @@ const Home = () => {
 
     } catch (err) {
       console.error("API Error:", err);
-      const errorMessage = err.response?.data?.detail || "An unexpected error occurred. Please try again.";
-      setError(errorMessage);
+      if (err.response?.status === 401) {
+        setError("Your session has expired. Please log in again.");
+        localStorage.removeItem('userToken'); // Clear expired token
+        navigate('/login');
+      } else {
+        setError(err.response?.data?.detail || "An unexpected error occurred. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -128,7 +146,6 @@ const Home = () => {
         <p>Identify your face across your gallery</p>
 
         <div className='main-container'>
-          {/* --- Target Image Section --- */}
           <div className='upload-section'>
             <h2 className='section-title'>Target Image</h2>
             <div 
@@ -142,8 +159,8 @@ const Home = () => {
                 </div>
               ) : ( 
                 <div className="upload-prompt">
-                  <span>Click to upload</span> <br/>
-                  <span className="or-divider">- or -</span> <br/>
+                  <span>Click to upload</span>
+                  <span className="or-divider">- or -</span>
                   <Button className="icon-btn" onClick={(e) => { e.stopPropagation(); openCamera('target'); }}>
                     <Camera size={15} /> Capture
                   </Button>
@@ -153,29 +170,26 @@ const Home = () => {
             </div>
           </div>
 
-          {/* --- Gallery Section (Reverted to old style) --- */}
           <div className='upload-section gallery-section'>
             <h2 className='section-title'>Image Gallery</h2>
             <div 
-              className='upload-box'
-              onClick={() => document.getElementById('gallery-upload').click()}
+                className='upload-box gallery-box'
+                onClick={() => document.getElementById('gallery-upload').click()}
             >
               {galleryPreviews.map((preview, index) => (
-                <div 
-                  key={index} 
-                  className='image-preview-wrapper' 
-                  onClick={(e) => e.stopPropagation()} // Prevent opening file dialog when clicking an image
-                >
+                <div key={index} className='image-preview-wrapper'>
                   <img src={preview} alt={`Gallery Preview ${index + 1}`} className='preview-image' />
                   <button onClick={(e) => removeGalleryImage(e, index)} className='remove-btn'>X</button>
                 </div>
               ))}
-              
-              {/* Show this prompt only when the gallery is empty */}
               {galleryPreviews.length === 0 && (
-                <div className="upload-prompt">
-                  <span>Click to upload</span>
-                </div>
+                 <div className="upload-prompt-gallery-initial">
+                    <span>Click to upload gallery</span>
+                    <span className="or-divider">- or -</span>
+                    <Button className="icon-btn" onClick={(e) => { e.stopPropagation(); openCamera('gallery'); }}>
+                        <Camera size={15} /> Capture
+                    </Button>
+                 </div>
               )}
               <input type='file' id='gallery-upload' multiple onChange={handleGalleryChange} style={{ display: 'none' }} />
             </div>
@@ -199,3 +213,4 @@ const Home = () => {
 };
 
 export default Home;
+
