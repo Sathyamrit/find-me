@@ -27,13 +27,20 @@ const Home = () => {
     }
   }, [navigate]);
 
+  // --- NEW: Logout Function ---
+  const handleLogout = () => {
+    // Clear the user's session token from storage
+    localStorage.removeItem('userToken');
+    // Redirect the user to the login page
+    navigate('/login');
+  };
+
   const findMe = async () => {
     if (!targetImage || galleryImages.length === 0) return;
 
     setIsLoading(true);
     setError(null);
 
-    // --- CRITICAL FIX: Get the token from localStorage ---
     const token = localStorage.getItem('userToken');
     if (!token) {
       setError("Authentication error. Please log in again.");
@@ -52,7 +59,6 @@ const Home = () => {
       const response = await axios.post(API_URL, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          // --- CRITICAL FIX: Add the Authorization header ---
           'Authorization': `Bearer ${token}`,
         },
       });
@@ -68,7 +74,7 @@ const Home = () => {
       console.error("API Error:", err);
       if (err.response?.status === 401) {
         setError("Your session has expired. Please log in again.");
-        localStorage.removeItem('userToken'); // Clear expired token
+        localStorage.removeItem('userToken');
         navigate('/login');
       } else {
         setError(err.response?.data?.detail || "An unexpected error occurred. Please try again.");
@@ -142,7 +148,12 @@ const Home = () => {
         onCapture={handleCapture}
       />
       <div className='home-container'>
-        <h1>Find Me</h1>
+        {/* --- NEW: Header section with Logout button --- */}
+        <div className="page-header">
+            <h1>Find Me</h1>
+            <Button className="logout-button" onClick={handleLogout}>Logout</Button>
+        </div>
+        
         <p>Identify your face across your gallery</p>
 
         <div className='main-container'>
@@ -213,4 +224,3 @@ const Home = () => {
 };
 
 export default Home;
-
