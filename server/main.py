@@ -26,73 +26,67 @@ def classify_and_match_gallery(target_file: UploadFile, gallery_files: List[Uplo
     Processes a gallery to classify images and find matches for a target face.
     This is a synchronous, CPU-intensive function designed to be run in a threadpool.
     """
-    # Initialize result lists
     matched_filenames = []
     unmatched_filenames_with_people = []
     filenames_without_people = []
     
+    target_encoding = None
+
     try:
-        # 1. Process the target image and get its face encoding.
+        # 1. Process the target image and attempt to get its face encoding.
         target_content = target_file.file.read()
         target_image_np = _process_image(target_content)
         target_face_locations = face_recognition.face_locations(target_image_np)
         
-        if not target_face_locations:
-            print("Warning: No face found in the target image.")
-            # If no target face, all gallery images with people are considered 'unmatched'.
-            for gallery_file in gallery_files:
-                try:
-                    gallery_content = gallery_file.file.read()
-                    gallery_image_np = _process_image(gallery_content)
-                    if len(face_recognition.face_locations(gallery_image_np)) > 0:
-                        unmatched_filenames_with_people.append(gallery_file.filename)
-                    else:
-                        filenames_without_people.append(gallery_file.filename)
-                except Exception:
-                    filenames_without_people.append(gallery_file.filename)
-            return {
-                "matched_images": [], 
-                "unmatched_images": unmatched_filenames_with_people, 
-                "images_without_people": filenames_without_people
-            }
+        if target_face_locations:
+            target_encoding = face_recognition.face_encodings(target_image_np, known_face_locations=target_face_locations)[0]
+        else:
+            print("Warning: No face found in the target image. All gallery images with faces will be classified as 'unmatched'.")
 
-        target_encoding = face_recognition.face_encodings(target_image_np, known_face_locations=target_face_locations)[0]
-        
-        # 2. Loop through each image in the gallery.
-        for gallery_file in gallery_files:
-            try:
-                gallery_content = gallery_file.file.read()
-                gallery_image_np = _process_image(gallery_content)
-                gallery_face_locations = face_recognition.face_locations(gallery_image_np)
-                
-                if not gallery_face_locations:
-                    filenames_without_people.append(gallery_file.filename)
-                    continue
+    except Exception as e:
+        print(f"A critical error occurred while processing the target image {target_file.filename}: {e}")
+        # If the target image fails to process, we can't perform matching.
+        # We can still classify the gallery images.
+        target_encoding = None
 
-                gallery_encodings = face_recognition.face_encodings(gallery_image_np, known_face_locations=gallery_face_locations)
-                
-                is_match_found = False
-                for gallery_encoding in gallery_encodings:
-                    is_match = face_recognition.compare_faces([target_encoding], gallery_encoding)[0]
-                    if is_match:
-                        matched_filenames.append(gallery_file.filename)
-                        is_match_found = True
-                        break 
-                
-                if not is_match_found:
-                    unmatched_filenames_with_people.append(gallery_file.filename)
-
-            except Exception as e:
-                print(f"Error processing gallery file {gallery_file.filename}: {e}")
+    # 2. Loop through each image in the gallery.
+    for gallery_file in gallery_files:
+        try:
+            gallery_content = gallery_file.file.read()
+            gallery_image_np = _process_image(gallery_content)
+            gallery_face_locations = face_recognition.face_locations(gallery_image_np)
+            
+            if not gallery_face_locations:
                 filenames_without_people.append(gallery_file.filename)
                 continue
 
-    except Exception as e:
-        print(f"A critical error occurred for target {target_file.filename}: {e}")
+            # If we have no valid target encoding, any image with people is automatically unmatched.
+            if not target_encoding:
+                unmatched_filenames_with_people.append(gallery_file.filename)
+                continue
+
+            gallery_encodings = face_recognition.face_encodings(gallery_image_np, known_face_locations=gallery_face_locations)
+            
+            is_match_found = False
+            for gallery_encoding in gallery_encodings:
+                is_match = face_recognition.compare_faces([target_encoding], gallery_encoding)[0]
+                if is_match:
+                    matched_filenames.append(gallery_file.filename)
+                    is_match_found = True
+                    break 
+            
+            if not is_match_found:
+                unmatched_filenames_with_people.append(gallery_file.filename)
+
+        except Exception as e:
+            # If a single gallery image is corrupt or fails, classify it as "without people" and move on.
+            print(f"Error processing gallery file {gallery_file.filename}: {e}")
+            filenames_without_people.append(gallery_file.filename)
+            continue
 
     return {
         "matched_images": matched_filenames, 
-        "unmatched_images": unmatched_filenames_with_people, 
+        "unmatched_images_with_people": unmatched_filenames_with_people, 
         "images_without_people": filenames_without_people
     }
 
@@ -101,7 +95,7 @@ def classify_and_match_gallery(target_file: UploadFile, gallery_files: List[Uplo
 app = FastAPI(
     title="FindMe API",
     description="API to classify images and find face matches.",
-    version="1.3.0", # Version updated for merged file
+    version="1.3.1", # Version updated for review
 )
 
 origins = [
@@ -138,5 +132,5 @@ async def classify_and_find_matches(
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to the FindMe Python Backend! Version 1.3"}
+    return {"message": "Welcome to the FindMe Python Backend! Version 1.3.1"}
 

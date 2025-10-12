@@ -11,6 +11,10 @@ numpy
 
 # For Database and Authentication 
 pymongo[srv]
-motor
 bcrypt
-python-dotenv
+passlib[bcrypt]
+python-jose[cryptography]
+pydantic-settings
+
+# Google Cloud Storage
+google-cloud-storage

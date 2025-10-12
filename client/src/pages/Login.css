@@ -36,6 +36,11 @@
   margin: 0 auto;
 }
 
+.signup-button {
+  width: 30%;
+  margin: 0 auto;
+}
+
 .error-message {
   color: #ff453a;
   text-align: center;
