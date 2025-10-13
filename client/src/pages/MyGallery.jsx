@@ -1,7 +1,7 @@
-// client/src/pages/MyGallery.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import './Result.css'; // Re-using styles from the Result page
 
 const API_URL = 'https://find-me-backend-service-933492600521.us-central1.run.app';
 
@@ -27,8 +27,10 @@ const MyGallery = () => {
             } catch (err) {
                 console.error("Failed to fetch user data:", err);
                 setError('Failed to load your gallery. Please try logging in again.');
-                localStorage.removeItem('userToken'); // Clear bad token
-                navigate('/login');
+                if (err.response?.status === 401) {
+                    localStorage.removeItem('userToken');
+                    navigate('/login');
+                }
             } finally {
                 setIsLoading(false);
             }
@@ -38,31 +40,31 @@ const MyGallery = () => {
     }, [navigate]);
 
     if (isLoading) {
-        return <div className="loading-container">Loading your gallery...</div>;
+        return <div className="home-container" style={{ textAlign: 'center', paddingTop: '5rem' }}><h2>Loading your gallery...</h2></div>;
     }
 
     if (error) {
-        return <div className="error-container">{error}</div>;
+        return <div className="home-container" style={{ textAlign: 'center', paddingTop: '5rem' }}><h2 className="error-message">{error}</h2></div>;
     }
 
     return (
         <div className="home-container">
-            <h1>Welcome, {user?.username}!</h1>
-            <p>Here are your saved image galleries.</p>
+            <h1>My Gallery</h1>
+            <p>Welcome back, {user?.username}! Here are the images you've saved.</p>
             
-            {/* You can now map over user.saved_galleries to display them */}
-            {/* This is a simple example to get you started */}
             <div className='results-section'>
-                <h2 className='section-title'>My Matched Images</h2>
+                <h2 className='section-title'>Saved Matched Images ({user?.saved_galleries?.length || 0})</h2>
                 <div className='upload-box gallery-box'>
                     {user?.saved_galleries && user.saved_galleries.length > 0 ? (
                         user.saved_galleries.map((url, index) => (
                             <div key={index} className='image-preview-wrapper'>
-                                <img src={url} alt={`Saved match ${index + 1}`} className='preview-image' />
+                                <a href={url} target="_blank" rel="noopener noreferrer">
+                                    <img src={url} alt={`Saved match ${index + 1}`} className='preview-image' />
+                                </a>
                             </div>
                         ))
                     ) : (
-                        <p>You haven't processed any images yet. Go to the <a href="/home">Home</a> page to start!</p>
+                        <p>You haven't saved any images yet. Process a new gallery on the "Upload & Process" page!</p>
                     )}
                 </div>
             </div>
