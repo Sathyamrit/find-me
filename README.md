@@ -23,3 +23,11 @@ https://find-me-backend-service-933492600521.us-central1.run.app/
     7Awi9kRv7WHQZKLe
   # connection string
     mongodb+srv://find_me_db_user:7Awi9kRv7WHQZKLe@find-me.kf6bime.mongodb.net/?retryWrites=true&w=majority&appName=find-me
+
+
+
+    mongodb+srv://sathyaamrit_db_user:5BAItZPj2kpIW1Ix@find-me-cluster0.gh318tf.mongodb.net/?retryWrites=true&w=majority&appName=find-me-cluster0
+
+    5BAItZPj2kpIW1Ix
+
+    sathyaamrit_db_user
