@@ -6,7 +6,9 @@ import './Home.css';
 import { Camera } from 'lucide-react';
 import CameraModal from '../components/CameraModal';
 
-const API_URL = 'https://find-me-backend-service-933492600521.us-central1.run.app/classify-and-match/';
+// const API_URL = 'https://find-me-backend-service-933492600521.us-central1.run.app/classify-and-match/';
+
+const API_URL = 'http://localhost:8000/classify-and-match/';
 
 const Home = () => {
   const [targetImage, setTargetImage] = useState(null);
@@ -58,7 +60,6 @@ const Home = () => {
     try {
       const response = await axios.post(API_URL, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`,
         },
       });
@@ -151,12 +152,13 @@ const Home = () => {
         {/* --- NEW: Header section with Logout button --- */}
         <div className="page-header">
             <h1>Find Me</h1>
-            <Button className="logout-button" onClick={handleLogout}>Logout</Button>
+            {/* <Button className="logout-button" onClick={handleLogout}>Logout</Button> */}
         </div>
         
         <p>Identify your face across your gallery</p>
 
         <div className='main-container'>
+          {/* Target Image */}
           <div className='upload-section'>
             <h2 className='section-title'>Target Image</h2>
             <div 
@@ -181,6 +183,7 @@ const Home = () => {
             </div>
           </div>
 
+          {/* Gallery Image */}
           <div className='upload-section gallery-section'>
             <h2 className='section-title'>Image Gallery</h2>
             <div 
@@ -196,10 +199,10 @@ const Home = () => {
               {galleryPreviews.length === 0 && (
                  <div className="upload-prompt-gallery-initial">
                     <span>Click to upload gallery</span>
-                    <span className="or-divider">- or -</span>
-                    <Button className="icon-btn" onClick={(e) => { e.stopPropagation(); openCamera('gallery'); }}>
+                    {/* <span className="or-divider">- or -</span> */}
+                    {/* <Button className="icon-btn" onClick={(e) => { e.stopPropagation(); openCamera('gallery'); }}>
                         <Camera size={15} /> Capture
-                    </Button>
+                    </Button> */}
                  </div>
               )}
               <input type='file' id='gallery-upload' multiple onChange={handleGalleryChange} style={{ display: 'none' }} />

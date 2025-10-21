@@ -15,6 +15,7 @@ bcrypt
 passlib[bcrypt]
 python-jose[cryptography]
 pydantic-settings
+motor
 
 # Google Cloud Storage
 google-cloud-storage

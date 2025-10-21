@@ -4,7 +4,9 @@ import axios from 'axios';
 import Button from '../components/Button';
 import './Signup.css';
 
-const API_URL = 'https://find-me-backend-service-933492600521.us-central1.run.app';
+// const API_URL = 'https://find-me-backend-service-933492600521.us-central1.run.app';
+
+const API_URL = 'http://localhost:8000';
 
 function Signup() {
   const [formData, setFormData] = useState({
@@ -41,13 +43,12 @@ function Signup() {
     setIsLoading(true);
 
     try {
-      // We don't need to send confirmPassword to the backend
       const { confirmPassword, ...payload } = formData;
       const response = await axios.post(`${API_URL}/signup`, payload);
       
-      setSuccess(response.data.message + ". Redirecting to login...");
+      const username = response.data?.username || payload.username || 'Account';
+      setSuccess(`${username} created successfully. Redirecting to login...`);
       
-      // Redirect to login page after a short delay to show the success message
       setTimeout(() => {
         navigate('/login');
       }, 2000);

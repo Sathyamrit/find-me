@@ -28,11 +28,12 @@
   flex-wrap: wrap;
   gap: 1rem;
   padding: 1rem;
-  background-color: #1c1c1e;
+  /* background-color: #1c1c1e; */
   border-radius: 12px;
-  min-height: 180px; /* Ensure a minimum height */
+  /* min-height: 180px; Ensure a minimum height */
+  min-height: 250px;
   align-items: center; /* Center placeholder text vertically */
-  justify-content: flex-start; /* Align items to the start */
+  justify-content: center; /* Align items to the start */
 }
 
 .image-preview-wrapper {

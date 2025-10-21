@@ -71,7 +71,8 @@ body {
 }
 
 .gallery-box {
- background-color: #669bbc;
+ /* background-color: #669bbc; */
+ min-height: 250px;
  flex-wrap: wrap; /* Allows items to wrap to the next line */
  gap: 1rem; /* Space between images */
  align-items: flex-start; /* Align items to the top */

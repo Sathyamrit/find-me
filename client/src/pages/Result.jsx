@@ -8,28 +8,39 @@ const Result = () => {
   const navigate = useNavigate();
 
   const { matchedImages, unmatchedWithPeople, withoutPeople } = useMemo(() => {
-    // Guard clause: if there's no state, return empty arrays
-    if (!state?.apiResponse || !state?.originalImages) {
+    if (!state?.apiResponse) {
       return { matchedImages: [], unmatchedWithPeople: [], withoutPeople: [] };
     }
 
-    const { apiResponse, originalImages } = state;
-    
-    // Create a mapping of filename to a temporary URL for quick lookups
-    const imageMap = new Map(originalImages.map(file => [file.name, URL.createObjectURL(file)]));
-    
-    // Map the filenames from the API response to their corresponding image URLs
-    const matched = (apiResponse.matched_images || []).map(name => ({ name, url: imageMap.get(name) })).filter(img => img.url);
-    const unmatched = (apiResponse.unmatched_images_with_people || []).map(name => ({ name, url: imageMap.get(name) })).filter(img => img.url);
-    const noPeople = (apiResponse.images_without_people || []).map(name => ({ name, url: imageMap.get(name) })).filter(img => img.url);
-    
+    const { apiResponse, originalImages } = state || {};
+    // Map local files by name for local previews
+    const imageMap = new Map((originalImages || []).map(file => [file.name, URL.createObjectURL(file)]));
+
+    const mapItem = (item, idx) => {
+      if (!item) return null;
+      // If backend returned a URL, use it directly
+      if (typeof item === 'string' && (item.startsWith('http://') || item.startsWith('https://'))) {
+        return { name: item.split('/').pop() || `image-${idx}`, url: item, isLocal: false };
+      }
+      // Otherwise try to resolve to a local file preview
+      const url = imageMap.get(item);
+      if (url) return { name: item, url, isLocal: true };
+      // fallback: return item as name (no url)
+      return { name: String(item), url: null, isLocal: false };
+    };
+
+    const matched = (apiResponse.matched_images || []).map(mapItem).filter(i => i.url);
+    const unmatched = (apiResponse.unmatched_images_with_people || []).map(mapItem).filter(i => i.url);
+    const noPeople = (apiResponse.images_without_people || []).map(mapItem).filter(i => i.url);
+
     return { matchedImages: matched, unmatchedWithPeople: unmatched, withoutPeople: noPeople };
   }, [state]);
 
   useEffect(() => {
+    // Revoke only local object URLs (created from File objects)
     return () => {
-      const allImages = [...matchedImages, ...unmatchedWithPeople, ...withoutPeople];
-      allImages.forEach(image => URL.revokeObjectURL(image.url));
+      const localImages = [...matchedImages, ...unmatchedWithPeople, ...withoutPeople].filter(i => i.isLocal);
+      localImages.forEach(image => URL.revokeObjectURL(image.url));
     };
   }, [matchedImages, unmatchedWithPeople, withoutPeople]);
 

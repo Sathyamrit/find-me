@@ -31,3 +31,8 @@ https://find-me-backend-service-933492600521.us-central1.run.app/
     5BAItZPj2kpIW1Ix
 
     sathyaamrit_db_user
+
+  # upload the backend code
+    gcloud builds submit --tag us-central1-docker.pkg.dev/find-me-470815/find-me-repo/find-me-backend
+
+    gcloud run deploy find-me-backend-service --image us-central1-docker.pkg.dev/find-me-470815/find-me-repo/find-me-backend --platform managed --region us-central1 --allow-unauthenticated --timeout=3600 --memory=2Gi --cpu=2 --cpu-boost

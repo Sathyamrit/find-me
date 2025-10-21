@@ -4,7 +4,9 @@ import axios from 'axios';
 import Button from '../components/Button';
 import './Login.css';
 
-const API_URL = 'https://find-me-backend-service-933492600521.us-central1.run.app';
+// const API_URL = 'https://find-me-backend-service-933492600521.us-central1.run.app';
+
+const API_URL = 'http://localhost:8000';
 
 function Login() {
   // FIX: Changed state to 'email' to match backend requirements
