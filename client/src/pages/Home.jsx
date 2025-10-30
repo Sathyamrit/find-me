@@ -6,6 +6,7 @@ import './Home.css';
 import { Camera } from 'lucide-react';
 import CameraModal from '../components/CameraModal';
 
+// Google cloud backend server
 // const API_URL = 'https://find-me-backend-service-933492600521.us-central1.run.app/classify-and-match/';
 
 const API_URL = 'http://localhost:8000/classify-and-match/';
@@ -21,7 +22,7 @@ const Home = () => {
   const [captureMode, setCaptureMode] = useState('target');
   const navigate = useNavigate();
 
-  // Redirect to login if no token is found
+  // Redirect to login if no token is found (JSW token to validate user)
   useEffect(() => {
     const token = localStorage.getItem('userToken');
     if (!token) {
@@ -29,14 +30,15 @@ const Home = () => {
     }
   }, [navigate]);
 
-  // --- NEW: Logout Function ---
+  // logout function
   const handleLogout = () => {
-    // Clear the user's session token from storage
+    // removing the user's session token from storage
     localStorage.removeItem('userToken');
-    // Redirect the user to the login page
+    // and the redirecting the user to the login page
     navigate('/login');
   };
 
+  // handling find me
   const findMe = async () => {
     if (!targetImage || galleryImages.length === 0) return;
 
@@ -85,6 +87,7 @@ const Home = () => {
     }
   };
 
+  // camera model
   const openCamera = (mode) => {
     setCaptureMode(mode);
     setIsModalOpen(true);
@@ -115,6 +118,7 @@ const Home = () => {
     }
   };
 
+  // remove target images
   const removeTargetImage = (e) => {
     e.stopPropagation(); 
     setTargetImage(null);
@@ -134,6 +138,7 @@ const Home = () => {
     setGalleryPreviews(prev => [...prev, ...newPreviews]);
   };
 
+  // remove gallery images
   const removeGalleryImage = (e, indexToRemove) => {
     e.stopPropagation();
     URL.revokeObjectURL(galleryPreviews[indexToRemove]);
@@ -149,10 +154,8 @@ const Home = () => {
         onCapture={handleCapture}
       />
       <div className='home-container'>
-        {/* --- NEW: Header section with Logout button --- */}
         <div className="page-header">
             <h1>Find Me</h1>
-            {/* <Button className="logout-button" onClick={handleLogout}>Logout</Button> */}
         </div>
         
         <p>Identify your face across your gallery</p>
@@ -199,10 +202,6 @@ const Home = () => {
               {galleryPreviews.length === 0 && (
                  <div className="upload-prompt-gallery-initial">
                     <span>Click to upload gallery</span>
-                    {/* <span className="or-divider">- or -</span> */}
-                    {/* <Button className="icon-btn" onClick={(e) => { e.stopPropagation(); openCamera('gallery'); }}>
-                        <Camera size={15} /> Capture
-                    </Button> */}
                  </div>
               )}
               <input type='file' id='gallery-upload' multiple onChange={handleGalleryChange} style={{ display: 'none' }} />

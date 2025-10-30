@@ -14,11 +14,11 @@ function Signup() {
     email: '',
     address: '',
     password: '',
-    confirmPassword: '', // Added for validation
+    confirmPassword: '',
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // Added for better UX
+  const [isLoading, setIsLoading] = useState(false); 
   const navigate = useNavigate();
 
   const handleLoginRedirect = () => {
@@ -34,7 +34,6 @@ function Signup() {
     setError('');
     setSuccess('');
 
-    // --- NEW: Client-side password validation ---
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match.");
       return; // Stop the submission
@@ -77,7 +76,6 @@ function Signup() {
           <label htmlFor='password'>Password:</label>
           <input type='password' id='password' name='password' value={formData.password} onChange={handleChange} required autoComplete="new-password" />
 
-          {/* --- NEW: Confirm Password Field --- */}
           <label htmlFor='confirmPassword'>Confirm Password:</label>
           <input type='password' id='confirmPassword' name='confirmPassword' value={formData.confirmPassword} onChange={handleChange} required autoComplete="new-password" />
           
@@ -88,7 +86,6 @@ function Signup() {
             <Button type='submit' className='signup-button' disabled={isLoading}>
               {isLoading ? 'Signing up...' : 'Sign Up'}
             </Button>
-            {/* FIX: Changed type to 'button' to prevent form submission */}
             <Button type='button' className='login-button' onClick={handleLoginRedirect} disabled={isLoading}>
               Back to Login
             </Button>

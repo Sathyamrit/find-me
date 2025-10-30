@@ -1,6 +1,7 @@
 import React, { useMemo, useEffect } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import './Result.css';
+import Home from './Home';
 import Button from '../components/Button';
 
 const Result = () => {
@@ -59,7 +60,6 @@ const Result = () => {
     <div className='home-container'>
       <h1>Classification Results</h1>
       
-      {/* --- NEW: Section for Matched Images --- */}
       <div className='results-section'>
         <h2 className='section-title'>Matched Images ({matchedImages.length})</h2>
         <div className='upload-box gallery-box'>
@@ -75,7 +75,6 @@ const Result = () => {
         </div>
       </div>
 
-      {/* --- NEW: Section for Unmatched Images (that still contain people) --- */}
       <div className='results-section' style={{marginTop: '3rem'}}>
         <h2 className='section-title'>Unmatched Images with People ({unmatchedWithPeople.length})</h2>
         <div className='upload-box gallery-box'>
@@ -91,7 +90,6 @@ const Result = () => {
         </div>
       </div>
 
-      {/* --- UPDATED: Section for Images Without People --- */}
       <div className='results-section' style={{marginTop: '3rem'}}>
         <h2 className='section-title'>Images Without People ({withoutPeople.length})</h2>
         <div className='upload-box gallery-box'>
@@ -110,7 +108,7 @@ const Result = () => {
       <div className='button-container'>
         <Button
           className='start-over'
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/Home')}
           >
           Start Over
         </Button>

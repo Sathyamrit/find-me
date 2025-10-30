@@ -1,4 +1,3 @@
-# Forcing a clean rebuild - 2025-10-16
 import io
 import os
 from datetime import datetime, timedelta, timezone
@@ -20,13 +19,6 @@ from PIL import Image, ImageOps
 from pydantic import BaseModel, Field, EmailStr
 from pydantic_settings import BaseSettings
 
-# ===============================================================================
-# CONFIGURATION
-# ===============================================================================
-
-# Use Pydantic's BaseSettings to load and validate environment variables.
-# This is a robust way to manage configuration. The app will fail to start
-# with a clear error if any of these are missing, preventing runtime errors.
 class Settings(BaseSettings):
     MONGO_URI: str
     GCS_BUCKET_NAME: Optional[str] = None
@@ -40,31 +32,28 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# ===============================================================================
-# SETUP: FastAPI App, Security, Database, Storage
-# ===============================================================================
-
 app = FastAPI(title="FindMe API", version="2.1.0")
 
-# --- CORS Middleware ---
+#CORS Middleware 
 origins = [
     "http://localhost:5173",
     "http://localhost:3000",
-    "https://find-me-sathyamrit.vercel.app", # Your frontend URL
+    "https://find-me-sathyamrit.vercel.app", 
     "https://find-me-backend-service-933492600521.us-central1.run.app"
 ]
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-# --- Security (Password Hashing & JWT) ---
+# Password Hashing & JWT) 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-# --- Database Connection (already present) ---
+# Database Connection 
 client = AsyncIOMotorClient(settings.MONGO_URI)
 db = client.find_me_db
 user_collection = db.users
 results_collection = db.results
 
-# --- Google Cloud Storage Client (optional) ---
+# Google Cloud Storage Client 
+# currently not in use / not working / service unavailable
 storage_client = None
 if settings.GCS_BUCKET_NAME:
     try:
@@ -72,23 +61,17 @@ if settings.GCS_BUCKET_NAME:
     except Exception as e:
         print(f"Warning: Google Cloud Storage client init failed: {e}. Falling back to local storage.")
 
-# Mount a static files directory so local uploads can be served when GCS is not configured
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
-# ===============================================================================
 # PYDANTIC MODELS
-# ===============================================================================
-
-# Helper to allow Pydantic to work with MongoDB's ObjectId
 class PyObjectId(ObjectId):
     @classmethod
     def __get_validators__(cls):
         yield cls.validate
     @classmethod
     def validate(cls, v, validation_info=None):
-        # Accept already-constructed ObjectId, strings, and raise on invalid values
         if isinstance(v, ObjectId):
             return v
         if isinstance(v, str) and ObjectId.is_valid(v):
@@ -119,9 +102,7 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-# ===============================================================================
 # AUTHENTICATION & HELPER FUNCTIONS
-# ===============================================================================
 
 def verify_password(plain_password, hashed_password):
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
@@ -139,7 +120,6 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     expire_delta = expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     expire = datetime.now(timezone.utc) + expire_delta
-    # Use integer timestamp for 'exp' claim for broad JWT library compatibility
     to_encode.update({"exp": int(expire.timestamp())})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
@@ -168,7 +148,6 @@ def upload_to_gcs(file_content: bytes, filename: str, user_id: str) -> str:
     Upload to Google Cloud Storage when configured. Otherwise save to local uploads directory
     and return a URL that FastAPI serves at /uploads/...
     """
-    # If GCS is configured and client available, use it
     if storage_client and settings.GCS_BUCKET_NAME:
         try:
             bucket = storage_client.bucket(settings.GCS_BUCKET_NAME)
@@ -178,9 +157,7 @@ def upload_to_gcs(file_content: bytes, filename: str, user_id: str) -> str:
             return blob.public_url
         except Exception as e:
             print(f"CRITICAL: Failed to upload {filename} to GCS. Error: {e}")
-            # fall through to local save
-
-    # Fallback: save locally under uploads/{user_id}/ and return a hosted URL
+          
     try:
         user_dir = os.path.join(UPLOAD_DIR, str(user_id))
         os.makedirs(user_dir, exist_ok=True)
@@ -195,9 +172,8 @@ def upload_to_gcs(file_content: bytes, filename: str, user_id: str) -> str:
         print(f"CRITICAL: Failed to save {filename} locally. Error: {e}")
         raise IOError(f"Failed to upload {filename} to storage.")
 
-# ===============================================================================
+
 # CORE LOGIC (CPU-INTENSIVE)
-# ===============================================================================
 
 def _process_image(file_content: bytes) -> np.ndarray:
     image = Image.open(io.BytesIO(file_content))
@@ -278,10 +254,7 @@ def classify_and_match_gallery(target_content: bytes, gallery_items: List[Dict],
         "images_without_people": urls_without_people
     }
 
-# ===============================================================================
 # API ENDPOINTS
-# ===============================================================================
-
 @app.get("/")
 def root():
     return {"message": "Welcome to the FindMe Python Backend! Version 2.1"}
@@ -371,9 +344,7 @@ async def classify_and_find_matches(
 
     return api_response
 
-# =========================
 # Stored result model + helper
-# =========================
 class StoredResult(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id")
     user_id: str
@@ -404,9 +375,7 @@ async def save_result_for_user(user_id: str, result: Dict) -> str:
     res = await results_collection.insert_one(doc)
     return str(res.inserted_id)
 
-# =========================
-# Endpoint: list current user's saved results
-# =========================
+# Endpoint
 @app.get("/results", response_model=List[StoredResult])
 async def list_my_results(current_user = Depends(get_current_user)):
     # current_user expected to have .id (ObjectId or str)
